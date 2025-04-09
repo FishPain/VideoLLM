@@ -1,3 +1,8 @@
+# Author: Tony
+# This file uses Qwen2.5-VL-32B-Instruct to process the AISG Challenge dataset.
+# It generates top k files and we adopt LLM as judge
+
+
 import os
 import tqdm
 import json
@@ -156,7 +161,6 @@ def process_dataset(
                 try:
                     output_text = clean_json_fenced_output(output_text)
                     answers = json.loads(output_text)
-                    print(answers)
                     if not (isinstance(answers, list)):
                         raise ValueError("Output is not a list")
 
@@ -177,8 +181,10 @@ def process_dataset(
                     results.append(
                         {
                             "qid": q["qid"],
+                            "video_id": video_id,
                             "question": q["question"],
-                            "answers": ans_list,  # Save the list directly
+                            "question_prompt": q["question_prompt"],
+                            "pred": ans_list,  # Save the list directly
                         }
                     )
 
@@ -197,11 +203,6 @@ def process_dataset(
 
 
 def save_results(results, output_path="aisg_predictions.jsonl"):
-    # df = pd.DataFrame(results)
-    # df = df.sort_values("qid")
-    # df.to_csv(output_path, index=False)
-    # print(f"✅ Saved results to {output_path}")
-
     with open(output_path, "w") as f:
         for row in results:
             f.write(json.dumps(row) + "\n")

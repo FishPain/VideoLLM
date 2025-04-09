@@ -6,22 +6,19 @@
 import os
 import tqdm
 import json
-import pandas as pd
-from collections import defaultdict
 from datasets import load_dataset
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 
 # Set video reader
 os.environ["FORCE_QWENVL_VIDEO_READER"] = "torchvision"
 
-
-def load_model_and_processor():
-    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        "Qwen/Qwen2.5-VL-32B-Instruct", torch_dtype="auto", device_map="auto"
-    )
-    processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-32B-Instruct")
-    return model, processor
+from utils import (
+    get_video_fps,
+    load_model_and_processor,
+    clean_json_fenced_output,
+    group_questions_by_video,
+    save_results,
+)
 
 
 def build_prompt(video_local_path, question_pairs):
@@ -83,28 +80,6 @@ Respond clearly and factually.
             ],
         },
     ]
-
-
-def clean_json_fenced_output(output: str) -> str:
-    output = output.strip()
-    if output.startswith("```"):
-        output = output.strip("`").strip()
-        if output.startswith("json"):
-            output = output[len("json") :].strip()
-    return output
-
-
-def group_questions_by_video(test_set):
-    video_to_questions = defaultdict(list)
-    for row in test_set:
-        video_to_questions[row["video_id"]].append(
-            {
-                "qid": row["qid"],
-                "question_prompt": row["question_prompt"],
-                "question": row["question"],
-            }
-        )
-    return video_to_questions
 
 
 def process_dataset(
@@ -200,14 +175,6 @@ def process_dataset(
             pbar.update(1)
 
     return results
-
-
-def save_results(results, output_path="aisg_predictions.jsonl"):
-    with open(output_path, "w") as f:
-        for row in results:
-            f.write(json.dumps(row) + "\n")
-
-    print(f"✅ Saved results to {output_path}")
 
 
 if __name__ == "__main__":

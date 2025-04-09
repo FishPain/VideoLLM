@@ -1,0 +1,9 @@
+accelerate
+qwen-vl-utils==0.0.10
+ipykernel
+git+https://github.com/huggingface/transformers
+torch 
+torchvision 
+torchaudio
+--extra-index-url https://download.pytorch.org/whl/cu126
+datasets

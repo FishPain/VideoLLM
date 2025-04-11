@@ -8,79 +8,15 @@ from datasets import load_dataset
 from qwen_vl_utils import process_vision_info
 
 from utils import (
-    get_video_info,
     load_model_and_processor,
     clean_json_fenced_output,
     group_questions_by_video,
     save_results,
+    build_prompt
 )
 
 # Set video reader
 os.environ["FORCE_QWENVL_VIDEO_READER"] = "torchvision"
-
-
-def build_prompt(video_local_path, question_pairs):
-    """
-    question_pairs: List of (question_prompt, question) tuples
-    """
-    combined_text = "**Task**\nAnalyze the video step by step, and answer the following questions clearly.\n\n"
-    for idx, (q_prompt, q_text) in enumerate(question_pairs, 1):
-        combined_text += f"**Prompt {idx}**\n{q_prompt.strip()}\n\n"
-        combined_text += f"**Question {idx}**\n{q_text.strip()}\n\n"
-        combined_text += f"**Answer {idx}**\n\n"
-
-    w, h, fps = get_video_info(video_local_path)
-
-    return [
-        {
-            "role": "system",
-            "content": [
-                {
-                    "type": "text",
-                    "text": """
-**System**
-You are a helpful and knowledgeable assistant.
-
-You will be shown a video and asked multiple questions about it. Your task is to analyze the video carefully and provide accurate answers based on both visual cues and real-world scientific reasoning.
-
-Please note:
-- Videos may be edited, stylized, or contain visual illusions.
-- What you see might not reflect physical reality — use scientific principles and common sense to ground your answers.
-- All phenomena can be explained by natural laws or video editing; avoid assuming supernatural or impossible events.
-- Physically impossible scenarios (e.g., reverse gravity, teleportation, infinite motion, etc.) should be treated as visual effects, camera tricks, or post-processing.
-
-Always provide a concise explanation for each answer, rooted in logical and scientific interpretation.
-
-Return your answers as a **JSON array** in the same order as the questions.
-- Example: ["Answer to Q1", "Answer to Q2", ...]
-- **Only** output the JSON array. Do not include any extra formatting such as ```json or commentary.
-
-You must respond in the following format:
-
-[
-  "Answer to Question 1",
-  "Answer to Question 2",
-  ...
-]
-Respond clearly and factually.
-                    """,
-                },
-            ],
-        },
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "video",
-                    "video": f"file://{video_local_path}",
-                    "max_pixels": w * h,
-                    "fps": fps,
-                },
-                {"type": "text", "text": combined_text},
-            ],
-        },
-    ]
-
 
 def process_dataset(
     model,
@@ -98,8 +34,7 @@ def process_dataset(
             video_local_path = os.path.join(data_dir, f"{video_id}.mp4")
             if not os.path.exists(video_local_path):
                 print(f"❌ Missing video: {video_local_path}")
-                pbar.update(1)
-                continue
+                video_local_path = None
 
             try:
                 question_pairs = [(q["question_prompt"], q["question"]) for q in qlist]
@@ -164,9 +99,8 @@ def process_dataset(
                     )
 
                     print(f"📄 QID: {q['qid']}")
-                    print(f"❓ Question: {q['question']}")
-                    for idx, ans in enumerate(ans_list, 1):
-                        print(f"🔹 Answer {idx}: {ans}")
+                    print(f"Question: {q['question']}")
+                    print(f"Answer: {ans_list}")
                     print("=" * 50)
 
             except Exception as e:
@@ -178,6 +112,6 @@ def process_dataset(
 
 
 if __name__ == "__main__":
-    model, processor = load_model_and_processor()
+    model, processor = load_model_and_processor("Qwen/Qwen2.5-VL-7B-Instruct")
     results = process_dataset(model, processor)
     save_results(results)

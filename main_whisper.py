@@ -8,75 +8,16 @@ from datasets import load_dataset
 from qwen_vl_utils import process_vision_info
 
 from utils import (
-    get_video_info,
     load_model_and_processor,
     clean_json_fenced_output,
     group_questions_by_video,
     save_results,
+    build_prompt,
     AudioTranscriber,
 )
 
 # Set video reader
 os.environ["FORCE_QWENVL_VIDEO_READER"] = "torchvision"
-
-
-def build_prompt(video_local_path, question_pairs):
-    """
-    question_pairs: List of (question_prompt, question) tuples
-    """
-    # 👇 Whisper transcription
-    transcript = at.transcribe_audio(video_local_path)
-
-    combined_text = "**Task**\nAnalyze the video step by step, and answer the following questions clearly.\n\n"
-    if transcript.strip():
-        combined_text += f"**Audio Transcript (from video)**\n{transcript.strip()}\n\n"
-
-    for idx, (q_prompt, q_text) in enumerate(question_pairs, 1):
-        combined_text += f"**Prompt {idx}**\n{q_prompt.strip()}\n\n"
-        combined_text += f"**Question {idx}**\n{q_text.strip()}\n\n"
-        combined_text += f"**Answer {idx}**\n\n"
-        
-    w,h,fps=get_video_info(video_local_path)
-
-    return [
-        {
-            "role": "system",
-            "content": [
-                {
-                    "type": "text",
-                    "text": """
-**System**
-You are a helpful and knowledgeable assistant.
-
-You will be shown a video and asked multiple questions about it. Your task is to analyze the video carefully and provide accurate answers based on both visual cues, audio transcript, and real-world scientific reasoning.
-
-Please note:
-- Videos may be edited, stylized, or contain visual illusions.
-- What you see or hear might not reflect physical reality — use scientific principles and common sense to ground your answers.
-- All phenomena can be explained by natural laws or video editing; avoid assuming supernatural or impossible events.
-
-Return your answers as a **JSON array** in the same order as the questions.
-- Example: ["Answer to Q1", "Answer to Q2", ...]
-- **Only** output the JSON array. Do not include any extra formatting such as ```json or commentary.
-
-Respond clearly and factually.
-                    """,
-                },
-            ],
-        },
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "video",
-                    "video": f"file://{video_local_path}",
-                    "max_pixels": w * h,
-                    "fps": fps
-                },
-                {"type": "text", "text": combined_text},
-            ],
-        },
-    ]
 
 
 def process_dataset(
@@ -161,9 +102,8 @@ def process_dataset(
                     )
 
                     print(f"📄 QID: {q['qid']}")
-                    print(f"❓ Question: {q['question']}")
-                    for idx, ans in enumerate(ans_list, 1):
-                        print(f"🔹 Answer {idx}: {ans}")
+                    print(f"Question: {q['question']}")
+                    print(f"Answer: {ans_list}")
                     print("=" * 50)
 
             except Exception as e:

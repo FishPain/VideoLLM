@@ -8,79 +8,18 @@ import tqdm
 import json
 from datasets import load_dataset
 from qwen_vl_utils import process_vision_info
+from prompts import EVALUATOR_SYSTEM_PROMPT
 
 # Set video reader
 os.environ["FORCE_QWENVL_VIDEO_READER"] = "torchvision"
 
 from utils import (
-    get_video_info,
+    build_prompt,
     load_model_and_processor,
     clean_json_fenced_output,
     group_questions_by_video,
     save_results,
 )
-
-
-def build_prompt(video_local_path, question_pairs):
-    """
-    question_pairs: List of (question_prompt, question) tuples
-    """
-    combined_text = "**Task**\nAnalyze the video step by step, and answer the following questions clearly.\n\n"
-    for idx, (q_prompt, q_text) in enumerate(question_pairs, 1):
-        combined_text += f"**Prompt {idx}**\n{q_prompt.strip()}\n\n"
-        combined_text += f"**Question {idx}**\n{q_text.strip()}\n\n"
-        combined_text += f"**Answer {idx}**\n\n"
-    w,h,fps=get_video_info(video_local_path)
-    return [
-        {
-            "role": "system",
-            "content": [
-                {
-                    "type": "text",
-                    "text": """
-**System**
-You are a helpful and knowledgeable assistant.
-
-You will be shown a video and asked multiple questions about it. Your task is to analyze the video carefully and provide accurate answers based on both visual cues and real-world scientific reasoning.
-
-Please note:
-- Videos may be edited, stylized, or contain visual illusions.
-- What you see might not reflect physical reality — use scientific principles and common sense to ground your answers.
-- All phenomena can be explained by natural laws or video editing; avoid assuming supernatural or impossible events.
-- Physically impossible scenarios (e.g., reverse gravity, teleportation, infinite motion, etc.) should be treated as visual effects, camera tricks, or post-processing.
-
-Return your answers in a **JSON array**, where each item is a list of 3 possible, distinct answers for a question.
-
-Example output format:
-
-[
-  ["Answer 1A", "Answer 1B", "Answer 1C"],
-  ["Answer 2A", "Answer 2B", "Answer 2C"],
-  ...
-]
-
-- Make sure each sublist contains 3 different plausible answers.
-- Do not include any markdown, explanation, or formatting like ```json.
-
-Respond clearly and factually.
-                    """,
-                },
-            ],
-        },
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "video",
-                    "video": f"file://{video_local_path}",
-                    "max_pixels": w*h,
-                    "fps": fps,
-                },
-                {"type": "text", "text": combined_text},
-            ],
-        },
-    ]
-
 
 def process_dataset(
     model,
@@ -103,7 +42,7 @@ def process_dataset(
 
             try:
                 question_pairs = [(q["question_prompt"], q["question"]) for q in qlist]
-                message = build_prompt(video_local_path, question_pairs)
+                message = build_prompt(video_local_path, question_pairs, EVALUATOR_SYSTEM_PROMPT)
 
                 text = processor.apply_chat_template(
                     message, tokenize=False, add_generation_prompt=True
@@ -164,9 +103,8 @@ def process_dataset(
                     )
 
                     print(f"📄 QID: {q['qid']}")
-                    print(f"❓ Question: {q['question']}")
-                    for idx, ans in enumerate(ans_list, 1):
-                        print(f"🔹 Answer {idx}: {ans}")
+                    print(f"Question: {q['question']}")
+                    print(f"Answer: {ans_list}")
                     print("=" * 50)
 
             except Exception as e:

@@ -27,7 +27,7 @@ Trends suggest the **Qwen2.5-VL 32B** model offers a **~10–15% improvement** i
 | Qwen2.5-VL 32B + Prompt Tuning + 1 FPS                                 | 40.33 | 23.0 |
 | Qwen2.5-VL 7B + Prompt Tuning + 1 FPS + Mock Missing Videos Answer     | 32.87 | 5.8  |
 | Qwen2.5-VL 7B + Base + 5 FPS                                           | 31.67 | 7.2  |
-| Qwen2.5-VL 7B + Base + External Evaluator Integration                  | None | None  |
+| Qwen2.5-VL 7B + Base + LLM as Judge to Evaluate Top K Answers          | None | None  |
 | Qwen2.5-VL 7B + Base + Audio Captioning via Whisper                    | None | None  |
 | Qwen2.5-VL 7B + Base + RNN Adapter for Recursive Video Understanding   | None | None  |
 

@@ -10,3 +10,4 @@ datasets
 opencv-python
 librosa
 faster_whisper
+yt-dlp

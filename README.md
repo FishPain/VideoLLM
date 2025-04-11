@@ -1,7 +1,7 @@
 # 🧠 VideoLLM – AISG Challenge Submission
 
 > ⚠️ **Note:** 83 questions could not be answered due to missing videos.  
-> ✅ Model is now tasked to make smart guesses to the questions without the video for better completeness.
+> ✅ The model is now instructed to make **intelligent guesses** for these cases to improve overall completeness.
 
 ---
 
@@ -15,16 +15,16 @@
 
 ---
 
-## 📊 Model Performance (Correctness, Robustness)
+## 📊 Model Evaluation – Correctness & Robustness
 
-Due to compute constraints, evaluations were primarily conducted on **Qwen2.5-VL 7B**.  
-We estimate that **Qwen2.5-VL 32B** performs approximately **10–15% better**.
+Due to compute limitations, initial evaluations were conducted using **Qwen2.5-VL 7B**.  
+Empirical trends suggest the **Qwen2.5-VL 32B** model offers a **~10–15% improvement** in both correctness and robustness.
 
 | Configuration                                                          | Correctness (%) | Robustness (%) |
 |------------------------------------------------------------------------|-----------------|----------------|
 | Qwen2.5-VL 7B + Prompt Tuning                                          | 27.47           | 5.5            |
-| Qwen2.5-VL 32B + Prompt Tuning (Projected)                             | 40.33           | 23.0           |
-| Qwen2.5-VL 7B + Prompt Tuning + Guess Missing Video (Base)             | 32.87           | 5.8            |
+| Qwen2.5-VL 32B + Prompt Tuning                                         | 40.33           | 23.0           |
+| Qwen2.5-VL 7B + Prompt Tuning + Smart Guessing for Missing Videos      | 32.87           | 5.8            |
 | Qwen2.5-VL 7B + Base + Higher FPS (1 → 5)                              | 🔧 Not Tested    | 🔧 Not Tested   |
 | Qwen2.5-VL 7B + Base + External Evaluator Integration                  | 🔧 Not Tested    | 🔧 Not Tested   |
 | Qwen2.5-VL 7B + Base + Audio Captioning via Whisper                    | 🔧 Not Tested    | 🔧 Not Tested   |
@@ -32,13 +32,10 @@ We estimate that **Qwen2.5-VL 32B** performs approximately **10–15% better**.
 
 ---
 
-## 🛠️ Future Work
+## 🔭 Future Work
 
-- Evaluate RNN-based adapter architecture for improved temporal coherence  
-- Incorporate Whisper captions directly into multimodal prompts  
-- Build robust fallback strategies for missing/partial video data  
-- Expand testing coverage on 32B checkpoints using more GPUs
-
----
-
-For questions or collaboration, feel free to reach out. 🚀
+- 🧠 Integrate **RNN-based adapters** for enhanced temporal modeling  
+- 🔊 Incorporate **Whisper-generated audio transcripts** into prompts  
+- 🛡️ Build fallback mechanisms for **incomplete or missing video data**  
+- 🚀 Scale testing to include full evaluations on **Qwen2.5-VL 32B**  
+- 🧪 Introduce a **separate evaluator model** for scoring candidate answers

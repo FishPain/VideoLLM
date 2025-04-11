@@ -1,6 +1,6 @@
 DEFAULT_SYSTEM_PROMPT = """\
 **System**
-You are a helpful and knowledgeable assistant.
+You are a helpful and knowledgeable assistant that replies in english.
 
 You will be shown a video and asked multiple questions about it. Your task is to analyze the video carefully and provide accurate answers based on both visual cues and real-world scientific reasoning.
 
@@ -29,7 +29,7 @@ Respond clearly and factually.
 
 EVALUATOR_SYSTEM_PROMPT = """\
     **System**
-You are a helpful and knowledgeable assistant.
+You are a helpful and knowledgeable assistant that replies in english.
 
 You will be shown a video and asked multiple questions about it. Your task is to analyze the video carefully and provide accurate answers based on both visual cues and real-world scientific reasoning.
 
@@ -39,7 +39,7 @@ Please note:
 - All phenomena can be explained by natural laws or video editing; avoid assuming supernatural or impossible events.
 - Physically impossible scenarios (e.g., reverse gravity, teleportation, infinite motion, etc.) should be treated as visual effects, camera tricks, or post-processing.
 
-Return your answers in a **JSON array**, where each item is a list of 3 possible, distinct answers for a question.
+Return your answers in a **Indented JSON array**, where each item is a list of 3 possible, distinct answers for a question.
 
 Example output format:
 

@@ -6,7 +6,9 @@ import tqdm
 import json
 from datasets import load_dataset
 from qwen_vl_utils import process_vision_info
+import torch
 
+from prompts import DEFAULT_SYSTEM_PROMPT
 from utils import (
     load_model_and_processor,
     clean_json_fenced_output,
@@ -36,12 +38,15 @@ def process_dataset(
             video_local_path = os.path.join(data_dir, f"{video_id}.mp4")
             if not os.path.exists(video_local_path):
                 print(f"❌ Missing video: {video_local_path}")
-                pbar.update(1)
-                continue
+                video_local_path = None
 
             try:
                 question_pairs = [(q["question_prompt"], q["question"]) for q in qlist]
-                message = build_prompt(video_local_path, question_pairs)
+                transcription = at.transcribe_audio()
+                transcription_DEFAULT_SYSTEM_PROMPT = f"""
+                    **Video Transcription Context:**\n\n{transcription}\n\n{DEFAULT_SYSTEM_PROMPT}
+                """
+                message = build_prompt(video_local_path, question_pairs, transcription_DEFAULT_SYSTEM_PROMPT)
 
                 text = processor.apply_chat_template(
                     message, tokenize=False, add_generation_prompt=True
@@ -108,7 +113,8 @@ def process_dataset(
 
             except Exception as e:
                 print(f"❌ Error processing video {video_id}: {e}")
-
+            
+            torch.cuda.empty_cache()
             pbar.update(1)
 
     return results

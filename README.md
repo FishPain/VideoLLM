@@ -18,17 +18,18 @@
 ## 📊 Model Evaluation – Correctness & Robustness
 
 Due to compute limitations, initial evaluations were conducted using **Qwen2.5-VL 7B**.  
-Empirical trends suggest the **Qwen2.5-VL 32B** model offers a **~10–15% improvement** in both correctness and robustness.
+Trends suggest the **Qwen2.5-VL 32B** model offers a **~10–15% improvement** in both correctness and robustness.
 
 | Configuration                                                          | Correctness (%) | Robustness (%) |
 |------------------------------------------------------------------------|-----------------|----------------|
-| Qwen2.5-VL 7B + Prompt Tuning                                          | 27.47           | 5.5            |
-| Qwen2.5-VL 32B + Prompt Tuning                                         | 40.33           | 23.0           |
-| Qwen2.5-VL 7B + Prompt Tuning + Smart Guessing for Missing Videos      | 32.87           | 5.8            |
-| Qwen2.5-VL 7B + Base + Higher FPS (1 → 5)                              | 🔧 Not Tested    | 🔧 Not Tested   |
-| Qwen2.5-VL 7B + Base + External Evaluator Integration                  | 🔧 Not Tested    | 🔧 Not Tested   |
-| Qwen2.5-VL 7B + Base + Audio Captioning via Whisper                    | 🔧 Not Tested    | 🔧 Not Tested   |
-| Qwen2.5-VL 7B + Base + RNN Adapter for Recursive Video Understanding   | 🔧 Not Tested    | 🔧 Not Tested   |
+| Qwen2.5-VL 7B                                                          | Not Tested      | Not Tested       |
+| Qwen2.5-VL 7B + Prompt Tuning + 1 FPS                                  | 27.47           | 5.5            |
+| Qwen2.5-VL 32B + Prompt Tuning + 1 FPS                                 | 40.33           | 23.0            |
+| Qwen2.5-VL 7B + Prompt Tuning + 1 FPS + Smart Guessing for Missing Videos     | 32.87    | 5.8            |
+| Qwen2.5-VL 7B + Base + 5 FPS                                           | 🔧 Not Tested    | 🔧 Not Tested       |
+| Qwen2.5-VL 7B + Base + External Evaluator Integration                  | 🔧 Not Tested    | 🔧 Not Tested       |
+| Qwen2.5-VL 7B + Base + Audio Captioning via Whisper                    | 🔧 Not Tested    | 🔧 Not Tested       |
+| Qwen2.5-VL 7B + Base + RNN Adapter for Recursive Video Understanding   | 🔧 Not Tested    | 🔧 Not Tested       |
 
 ---
 

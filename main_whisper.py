@@ -65,17 +65,18 @@ def process_dataset(
                     **video_kwargs,
                 ).to("cuda")
 
-                generated_ids = model.generate(**inputs, max_new_tokens=1024)
-                generated_ids_trimmed = [
-                    out_ids[len(in_ids) :]
-                    for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-                ]
+                with torch.no_grad():
+                    generated_ids = model.generate(**inputs, max_new_tokens=1024)
+                    generated_ids_trimmed = [
+                        out_ids[len(in_ids) :]
+                        for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                    ]
 
-                output_text = processor.batch_decode(
-                    generated_ids_trimmed,
-                    skip_special_tokens=True,
-                    clean_up_tokenization_spaces=False,
-                )[0]
+                    output_text = processor.batch_decode(
+                        generated_ids_trimmed,
+                        skip_special_tokens=True,
+                        clean_up_tokenization_spaces=False,
+                    )[0]
                 try:
                     output_text = clean_json_fenced_output(output_text)
                     answers = json.loads(output_text)

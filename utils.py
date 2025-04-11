@@ -28,7 +28,7 @@ def clean_json_fenced_output(output: str) -> str:
     return output
 
 
-def load_model_and_processor(model_name="Qwen/Qwen2.5-VL-32B-Instruct"):
+def load_model_and_processor(model_name="Qwen/Qwen2.5-VL-7B-Instruct"):
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_name, torch_dtype="auto", device_map="auto"
     )
@@ -119,12 +119,11 @@ def build_prompt(video_local_path, question_pairs, custom_system_message=DEFAULT
 
     if video_local_path is not None:
         w,h,fps=get_video_info(video_local_path)
-        max_pixels = w * h if w * h >= 602112 else 602112
-
+        
         content.append({
             "type": "video",
             "video": f"file://{video_local_path}",
-            "max_pixels": max_pixels,
+            "max_pixels": w*h,
             "fps": 1,
         }),
 

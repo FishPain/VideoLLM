@@ -4,6 +4,7 @@
 import os
 import tqdm
 import json
+import torch
 from datasets import load_dataset
 from qwen_vl_utils import process_vision_info
 
@@ -17,6 +18,7 @@ from utils import (
 
 # Set video reader
 os.environ["FORCE_QWENVL_VIDEO_READER"] = "torchvision"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 def process_dataset(
     model,
@@ -56,18 +58,19 @@ def process_dataset(
                     return_tensors="pt",
                     **video_kwargs,
                 ).to("cuda")
+                
+                with torch.no_grad():
+                    generated_ids = model.generate(**inputs, max_new_tokens=1024)
+                    generated_ids_trimmed = [
+                        out_ids[len(in_ids) :]
+                        for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                    ]
 
-                generated_ids = model.generate(**inputs, max_new_tokens=1024)
-                generated_ids_trimmed = [
-                    out_ids[len(in_ids) :]
-                    for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-                ]
-
-                output_text = processor.batch_decode(
-                    generated_ids_trimmed,
-                    skip_special_tokens=True,
-                    clean_up_tokenization_spaces=False,
-                )[0]
+                    output_text = processor.batch_decode(
+                        generated_ids_trimmed,
+                        skip_special_tokens=True,
+                        clean_up_tokenization_spaces=False,
+                    )[0]
                 try:
                     output_text = clean_json_fenced_output(output_text)
                     answers = json.loads(output_text)
@@ -105,7 +108,8 @@ def process_dataset(
 
             except Exception as e:
                 print(f"❌ Error processing video {video_id}: {e}")
-
+            
+            torch.cuda.empty_cache()
             pbar.update(1)
 
     return results

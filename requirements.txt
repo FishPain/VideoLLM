@@ -8,3 +8,5 @@ torchaudio
 --extra-index-url https://download.pytorch.org/whl/cu126
 datasets
 opencv-python
+librosa
+faster_whisper

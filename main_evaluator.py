@@ -13,7 +13,7 @@ from qwen_vl_utils import process_vision_info
 os.environ["FORCE_QWENVL_VIDEO_READER"] = "torchvision"
 
 from utils import (
-    get_video_fps,
+    get_video_info,
     load_model_and_processor,
     clean_json_fenced_output,
     group_questions_by_video,
@@ -30,7 +30,7 @@ def build_prompt(video_local_path, question_pairs):
         combined_text += f"**Prompt {idx}**\n{q_prompt.strip()}\n\n"
         combined_text += f"**Question {idx}**\n{q_text.strip()}\n\n"
         combined_text += f"**Answer {idx}**\n\n"
-
+    w,h,fps=get_video_info(video_local_path)
     return [
         {
             "role": "system",
@@ -73,8 +73,8 @@ Respond clearly and factually.
                 {
                     "type": "video",
                     "video": f"file://{video_local_path}",
-                    "max_pixels": 360 * 420,
-                    "fps": 1.0,
+                    "max_pixels": w*h,
+                    "fps": fps,
                 },
                 {"type": "text", "text": combined_text},
             ],

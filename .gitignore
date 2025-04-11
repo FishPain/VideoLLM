@@ -5,9 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+.DS_*
 *.csv
-data/
 
 # Distribution / packaging
 .Python

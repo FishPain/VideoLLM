@@ -32,6 +32,14 @@ def load_model_and_processor(model_name="Qwen/Qwen2.5-VL-7B-Instruct"):
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_name, torch_dtype="auto", device_map="auto"
     )
+    # We recommend enabling flash_attention_2 for better acceleration and memory saving, especially in multi-image and video scenarios.
+    # model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+    #     "Qwen/Qwen2.5-VL-7B-Instruct",
+    #     torch_dtype="auto",
+    #     attn_implementation="flash_attention_2",
+    #     device_map="auto",
+    # )
+
     processor = AutoProcessor.from_pretrained(model_name)
     return model, processor
 
@@ -92,41 +100,48 @@ class AudioTranscriber:
         self.whisper_model = WhisperModel("base.en", compute_type="auto")
 
     def transcribe_audio(self, video_path):
-        audio_path = extract_audio(video_path)
+        audio_path = video_path.replace(".mp4", ".wav") if video_path.endswith(".mp4") else None
+        if not audio_path or not os.path.exists(audio_path):
+            # Extract audio if not already done
+            audio_path = extract_audio(video_path)
         segments, _ = self.whisper_model.transcribe(audio_path)
         transcription = " ".join([seg.text for seg in segments])
-
-        # Clean up
-        if os.path.exists(audio_path):
-            os.remove(audio_path)
 
         return transcription
 
 
-def build_prompt(video_local_path, question_pairs, custom_system_message=DEFAULT_SYSTEM_PROMPT):
+def build_prompt(video_local_path, question_pairs, custom_system_message=DEFAULT_SYSTEM_PROMPT, transcription=""):
     """
     question_pairs: List of (question_prompt, question) tuples
     """
-    combined_text = "**Task**\nAnalyze the video step by step, and answer the following questions clearly.\n\n"
-    for idx, (q_prompt, q_text) in enumerate(question_pairs, 1):
-        combined_text += f"**Prompt {idx}**\n{q_prompt.strip()}\n\n"
-        combined_text += f"**Question {idx}**\n{q_text.strip()}\n\n"
-        combined_text += f"**Answer {idx}**\n\n"
+    content = []
     
-    content = [
-        {"type": "text", "text": combined_text},
-    ]
-
     if video_local_path is not None:
-        w,h,fps=get_video_info(video_local_path)
-        
+        w, h, fps = get_video_info(video_local_path)
         content.append({
             "type": "video",
             "video": f"file://{video_local_path}",
-            "max_pixels": w*h,
+            "max_pixels": w * h,
             "fps": 1,
-        }),
+        })
 
+        video_instruction = "Analyze the video step by step, and answer the following questions clearly."
+    else:
+        video_instruction = (
+            "The video file is missing. Based on the available information (prompt), "
+            "make your best guess to answer each question. ALWAYS GIVE AN ANSWER."
+        )
+
+    combined_text = f"**Task**\n{video_instruction}\n\n"
+    for idx, (q_prompt, q_text) in enumerate(question_pairs):
+        combined_text += f"**Prompt {idx}**\n{q_prompt.strip()}\n\n"
+        if transcription:
+            combined_text += f"**Video Transcription {idx}**\n{transcription.strip()}\n\n"
+        combined_text += f"**Question {idx}**\n{q_text.strip()}\n\n"
+        combined_text += f"**Answer {idx}**\n\n"
+
+    content.append({"type": "text", "text": combined_text})
+    
     return [
         {
             "role": "system",

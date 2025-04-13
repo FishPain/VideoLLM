@@ -27,7 +27,7 @@ def process_dataset(
     processor,
     dataset_name="lmms-lab/AISG_Challenge",
     split="test",
-    data_dir="/workspace/data/",
+    data_dir="/workspace/VideoLLM/data/",
 ):
     dataset = load_dataset(dataset_name, split=split)
     video_to_questions = group_questions_by_video(dataset)
@@ -40,18 +40,13 @@ def process_dataset(
                 print(f"❌ Missing video: {video_local_path}")
                 video_local_path = None
 
-            try:
+            try:                
+                transcription = at.transcribe_audio(video_local_path) if video_local_path else "Not Available"
                 question_pairs = [(q["question_prompt"], q["question"]) for q in qlist]
-                transcription = at.transcribe_audio()
-                transcription_DEFAULT_SYSTEM_PROMPT = f"""
-                    **Video Transcription Context:**\n\n{transcription}\n\n{DEFAULT_SYSTEM_PROMPT}
-                """
-                message = build_prompt(video_local_path, question_pairs, transcription_DEFAULT_SYSTEM_PROMPT)
-
+                message = build_prompt(video_local_path, question_pairs, transcription=transcription)
                 text = processor.apply_chat_template(
                     message, tokenize=False, add_generation_prompt=True
                 )
-
                 image_inputs, video_inputs, video_kwargs = process_vision_info(
                     message, return_video_kwargs=True
                 )
@@ -79,7 +74,8 @@ def process_dataset(
                     )[0]
                 try:
                     output_text = clean_json_fenced_output(output_text)
-                    answers = json.loads(output_text)
+                    answers_json = json.loads(output_text)
+                    answers = answers_json
                     if not (isinstance(answers, list)):
                         raise ValueError("Output is not a list")
 
@@ -97,6 +93,9 @@ def process_dataset(
                     answers += [""] * (len(qlist) - len(answers))
 
                 for q, ans_list in zip(qlist, answers):
+                    if not ans_list:
+                        assert f"answer is empty: {answers_json}"
+
                     results.append(
                         {
                             "qid": q["qid"],
@@ -109,6 +108,8 @@ def process_dataset(
 
                     print(f"📄 QID: {q['qid']}")
                     print(f"Question: {q['question']}")
+                    print(f"Transcription: {transcription}")
+                    print(f"Video ID: {answers_json}")
                     print(f"Answer: {ans_list}")
                     print("=" * 50)
 
@@ -124,6 +125,6 @@ def process_dataset(
 if __name__ == "__main__":
     global at
     at = AudioTranscriber()
-    model, processor = load_model_and_processor()
+    model, processor = load_model_and_processor("Qwen/Qwen2.5-VL-32B-Instruct")
     results = process_dataset(model, processor)
     save_results(results)

@@ -25,7 +25,7 @@ def process_dataset(
     processor,
     dataset_name="lmms-lab/AISG_Challenge",
     split="test",
-    data_dir="/workspace/data/",
+    data_dir="/workspace/VideoLLM/data/",
 ):
     dataset = load_dataset(dataset_name, split=split)
     video_to_questions = group_questions_by_video(dataset)

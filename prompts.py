@@ -24,6 +24,7 @@ You must respond in the following format:
   ...
 ]
 Respond clearly and factually.
+**Always return an answer. If you are not sure, provide the best guess based on the information available.**
 """
 
 
@@ -53,4 +54,5 @@ Example output format:
 - Do not include any markdown, explanation, or formatting like ```json.
 
 Respond clearly and factually.
+**Always return an answer. If you are not sure, provide the best guess based on the information available.**
 """

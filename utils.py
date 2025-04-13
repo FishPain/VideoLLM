@@ -94,6 +94,41 @@ def extract_audio(video_path, output_audio_path=None, sample_rate=16000):
     return output_audio_path
 
 
+def change_video_speed(input_path, output_path, speed_factor):
+    # Handle audio tempo (ffmpeg supports 0.5–2.0 per filter, so we may need chaining)
+    def get_atempo_chain(factor):
+        if factor <= 0:
+            raise ValueError("Speed factor must be positive")
+
+        chain = []
+        while factor < 0.5:
+            chain.append("atempo=0.5")
+            factor /= 0.5
+        while factor > 2.0:
+            chain.append("atempo=2.0")
+            factor /= 2.0
+        chain.append(f"atempo={factor:.5f}")
+        return ",".join(chain)
+
+    if speed_factor == 1.0:
+        print("Speed factor is 1.0, skipping processing.")
+        return
+
+    video_filter = f"setpts={1/speed_factor}*PTS"
+    audio_filter = get_atempo_chain(speed_factor)
+
+    ffmpeg_cmd = [
+        "ffmpeg",
+        "-i", input_path,
+        "-filter_complex", f"[0:v]{video_filter}[v];[0:a]{audio_filter}[a]",
+        "-map", "[v]",
+        "-map", "[a]",
+        "-y",  # Overwrite output if exists
+        output_path
+    ]
+
+    subprocess.run(ffmpeg_cmd, check=True)
+
 class AudioTranscriber:
     def __init__(self):
         # Load the Whisper model
@@ -157,3 +192,12 @@ def build_prompt(video_local_path, question_pairs, custom_system_message=DEFAULT
             "content": content,
         },
     ]
+
+if __name__ == "__main__":
+    l = os.listdir("/workspace/data")
+    for path in l:
+        if path.endswith(".mp4"):
+            input_path = os.path.join("/workspace/data", path)
+            output_path = os.path.join("/workspace/data/slow05", f"{path}")
+            change_video_speed(input_path, output_path, 0.5)  # Change speed to 0.5x
+            print(f"Processed {input_path} to {output_path}")

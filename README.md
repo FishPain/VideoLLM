@@ -33,10 +33,7 @@ Trends suggest the **Qwen2.5-VL 32B** model offers a **~10–15% improvement** i
 
 ---
 
-## 🔭 Future Work
-
-- 🧠 Integrate **RNN-based adapters** for enhanced temporal modeling  
-- 🔊 Incorporate **Whisper-generated audio transcripts** into prompts  
-- 🛡️ Build fallback mechanisms for **incomplete or missing video data**  
-- 🚀 Scale testing to include full evaluations on **Qwen2.5-VL 32B**  
-- 🧪 Introduce a **separate evaluator model** for scoring candidate answers
+## Ideas
+- test out video llama 3
+- Video at 0.5 time speed
+- Multi-step inference with smaller model and lower resolution video to identify video chunk that's relevant then use a larger model to analyze that higher resolution chunk.

@@ -1,5 +1,5 @@
-accelerate
-qwen-vl-utils==0.0.10
+accelerate>=0.26.0
+qwen-vl-utils[decord]
 ipykernel
 git+https://github.com/huggingface/transformers
 torch 

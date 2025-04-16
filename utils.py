@@ -6,6 +6,7 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from collections import defaultdict
 from faster_whisper import WhisperModel
 from prompts import DEFAULT_SYSTEM_PROMPT
+import torch
 
 def get_video_info(path):
     """
@@ -30,12 +31,12 @@ def clean_json_fenced_output(output: str) -> str:
 
 def load_model_and_processor(model_name="Qwen/Qwen2.5-VL-7B-Instruct"):
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        model_name, torch_dtype="auto", device_map="auto"
+        model_name, torch_dtype='auto', device_map="auto"
     )
     # We recommend enabling flash_attention_2 for better acceleration and memory saving, especially in multi-image and video scenarios.
     # model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-    #     "Qwen/Qwen2.5-VL-7B-Instruct",
-    #     torch_dtype="auto",
+    #     model_name,
+    #     torch_dtype=torch.bfloat16,
     #     attn_implementation="flash_attention_2",
     #     device_map="auto",
     # )
@@ -152,15 +153,17 @@ def build_prompt(video_local_path, question_pairs, custom_system_message=DEFAULT
     content = []
     
     if video_local_path is not None:
-        w, h, fps = get_video_info(video_local_path)
+        # w, h, fps = get_video_info(video_local_path)
         content.append({
             "type": "video",
             "video": f"file://{video_local_path}",
-            "max_pixels": w * h,
+            "resized_height": 1280,
+            "resized_width": 720,
+            # "max_pixels": 720 * 1280,
             "fps": 1,
         })
 
-        video_instruction = "Analyze the video step by step, and answer the following questions clearly."
+        video_instruction = "Analyze the video and think step by step. \n Answer the following questions clearly and only has to give a short answer:\n"
     else:
         video_instruction = (
             "The video file is missing. Based on the available information (prompt), "
